@@ -39,7 +39,7 @@ Makefile uses Homebrew Python 3.13 when available on macOS; override `PYTHON`
 when needed. Standard-library-only runtime and tests require no dependency install.
 Docker collection uses the same SQLite/JSON writer, scheduled every 30 seconds
 by systemd. Its multi-stage image runs tests before copying only runtime source.
-The container has no network or capabilities, writes only data, and reads six
+The container has no network or capabilities, writes only data, and reads five
 individual host proc counters. It does not mount the host root or all of /proc.
 The original native service remains available for explicit rollback.
 
