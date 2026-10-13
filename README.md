@@ -57,3 +57,17 @@ automatic deployment is opt-in through the METRICS_AUTO_DEPLOY repository variab
 timer. Source versions remain immutable; the runtime data directory is retained.
 Public pull requests use GitHub-hosted runners and have no deployment secrets.
 The manual `Release` workflow validates build/upload without publishing or deploying.
+
+## Kernel maintenance
+
+This project commits local copies of Vibecoding Kernel rules. Configure the
+local source once, then refresh the managed rules and routing:
+
+```sh
+make vibe-kernel-set KERNEL=/absolute/path/to/vibecoding-kernel
+make vibe-pull
+```
+
+`make vibe-kernel-path` shows the configured source. The machine-specific
+`.vibe/KERNEL_SOURCE` is ignored by Git. `make vibe-propose` submits an
+interactive, reviewable proposal to that source; it changes no shared rule.
