@@ -52,8 +52,8 @@ make release-push
 The first command verifies the clean main branch, runs checks, updates the
 native version/changelog, commits and creates an annotated tag. The second
 pushes main and its release tag. GitHub Actions builds a checksummed source
-archive, publishes a GitHub Release, and deploys it using the restricted SSH
-installer. A failed deploy restores the prior service/source and resumes the
+archive, publishes a GitHub Release. Deployment uses the checked SSH installer;
+automatic deployment is opt-in through the METRICS_AUTO_DEPLOY repository variable. A failed deploy restores the prior service/source and resumes the
 timer. Source versions remain immutable; the runtime data directory is retained.
 Public pull requests use GitHub-hosted runners and have no deployment secrets.
 The manual `Release` workflow validates build/upload without publishing or deploying.

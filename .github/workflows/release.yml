@@ -54,6 +54,7 @@ jobs:
           (cd dist && sha256sum -c *.sha256)
           gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --title "$GITHUB_REF_NAME" --notes-file CHANGELOG.md
   deploy:
+    if: vars.METRICS_AUTO_DEPLOY == 'true'
     needs: publish
     runs-on: ubuntu-latest
     concurrency:

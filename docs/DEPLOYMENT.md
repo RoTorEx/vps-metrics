@@ -43,7 +43,22 @@ unprivileged service. Service definitions supplied by an artifact are never
 installed as root. Installer/service changes need an explicit administrator
 installation using this stage.
 
-## 3. Restricted deployment identity
+## 3. Existing administrator access or optional restricted identity
+
+The first deployment can reuse existing administrator SSH, without creating
+users, adding sudo rules, or putting a private key in GitHub. Build/download the
+checksummed release, then use:
+
+```sh
+python3 tools/deploy.py --admin --host VPS_HOST --user ADMIN_USER \
+  --key EXISTING_ADMIN_KEY --known-hosts VERIFIED_KNOWN_HOSTS
+```
+
+The administrator installs the endpoint and canonical service from Stage 2.
+For optional automated deployment, explicitly authorize the new access boundary
+before following the remaining instructions in this stage.
+
+### Optional restricted deployment identity
 
 ```sh
 sudo useradd --create-home --shell /bin/sh metrics-deploy
@@ -70,14 +85,15 @@ Use a pinned known_hosts entry obtained through an already trusted admin session
 
 ## 4. First deployment and automation
 
-In this GitHub repository, configure secrets `DEPLOY_HOST`, `DEPLOY_USER`,
+For optional automatic deployment, configure secrets `DEPLOY_HOST`, `DEPLOY_USER`,
 `DEPLOY_SSH_PRIVATE_KEY`, and `DEPLOY_KNOWN_HOSTS`. The last contains the pinned
 host-key line. Do not commit private credentials or personal server addresses.
 
 Before the first tag, push committed main and run the manual `Release` workflow;
 it checks Linux targets and uploads the same artifact without publishing or
 deploying. Then run `make release`, enter the version, and `make release-push`.
-Only version tags publish/deploy. Verify the GitHub Release assets and deployment
+Only version tags publish. Automatic deployment requires setting repository variable
+`METRICS_AUTO_DEPLOY=true` after its restricted access is configured. Verify the GitHub Release assets and deployment
 job, not just the local tag. First-time installation must enable the timer:
 
 ```sh
@@ -92,7 +108,7 @@ python3 -m vps_metrics latest
 
 For an explicit manual deployment of a built checksummed archive, set
 `DEPLOY_HOST`, `DEPLOY_KEY` and `DEPLOY_KNOWN_HOSTS_FILE`, then `make deploy`.
-The normal tag workflow does this automatically with repository secrets.
+An enabled automatic tag workflow does this with repository secrets.
 Verify repeated timer samples, database integrity, read-only consumer access,
 and boot persistence. The collector has no IP access; the external heartbeat
 remains a separate service in personal-monitoring.
