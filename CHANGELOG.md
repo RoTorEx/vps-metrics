@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-13
+
 - Collect Linux host CPU, memory, swap, filesystem, load, uptime and per-interface network counters every 30 seconds.
 - Persist bounded UTC history in SQLite with read-only latest and aggregated interval APIs.
 - Publish an atomic JSON snapshot only after a successful history commit.
