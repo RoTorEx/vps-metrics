@@ -17,7 +17,7 @@ def version():
     return tomllib.loads((Path(__file__).parents[1] / "pyproject.toml").read_text())["project"]["version"]
 
 
-def run_once(directory, disk, retention_days, max_samples, max_db_mib):
+def run_once(directory, disk, retention_days, max_samples, max_db_mib, proc_root="/proc"):
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / ".collector.lock").open("a") as lock:
@@ -27,7 +27,7 @@ def run_once(directory, disk, retention_days, max_samples, max_db_mib):
             raise RuntimeError("A collector run is already active") from None
         database = directory / "metrics.db"
         previous = storage.previous(database) if database.exists() else None
-        sample, counters = collect.snapshot(disk, previous)
+        sample, counters = collect.snapshot(disk, previous, proc=Path(proc_root))
         sample["collector_version"] = version()
         storage.store(database, sample, counters, retention_days, max_samples, max_db_mib)
         storage.publish(directory / "snapshot.json", sample)
@@ -41,6 +41,7 @@ def main():
     command = commands.add_parser("collect")
     command.add_argument("--data-dir", default="/srv/monitoring/data")
     command.add_argument("--disk", default="/srv")
+    command.add_argument("--proc-root", default="/proc", help="Read-only host counters mount for container collection.")
     command.add_argument("--retention-days", type=int, default=30)
     command.add_argument("--max-samples", type=int, default=86400)
     command.add_argument("--max-db-mib", type=int, default=256)
@@ -55,7 +56,7 @@ def main():
     try:
         if args.command == "collect":
             os.umask(0o022)
-            data = run_once(args.data_dir, args.disk, args.retention_days, args.max_samples, args.max_db_mib)
+            data = run_once(args.data_dir, args.disk, args.retention_days, args.max_samples, args.max_db_mib, args.proc_root)
             print(json.dumps({"captured_at": data["captured_at"], "collector_version": data["collector_version"], "history": "committed"}))
         elif args.command == "latest":
             print(json.dumps(storage.latest(args.database), allow_nan=False))

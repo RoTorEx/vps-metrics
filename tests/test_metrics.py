@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 from vps_metrics import collect, storage
 from vps_metrics.__main__ import run_once
-from tools.install_release import unpack
+from tools.install_release import unpack, deploy
 
 BASE = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
 
@@ -93,6 +93,28 @@ class StorageTests(unittest.TestCase):
                 run_once(self.root, '/', 30, 86400, 256)
         self.assertEqual(target.read_text(), 'old')
 
+    def test_container_proc_mount_reaches_persisted_sample(self):
+        proc = self.root / 'host-proc'
+        values = {
+            'stat': 'cpu 10 0 10 70 10 0 0 0',
+            'meminfo': 'MemTotal: 100 kB\nMemAvailable: 40 kB\nSwapTotal: 20 kB\nSwapFree: 15 kB',
+            'uptime': '1234.0 0.0',
+            'sys/kernel/random/boot_id': 'host-boot',
+            'net/dev': 'header\nheader\neth0: 100 0 0 0 0 0 0 0 200 0 0 0 0 0 0 0',
+        }
+        for name, text in values.items():
+            target = proc / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text)
+        with patch('vps_metrics.collect.time.sleep', side_effect=lambda _: (proc / 'stat').write_text('cpu 30 0 30 130 10 0 0 0')):
+            result = run_once(self.root, self.root, 30, 86400, 256, proc_root=proc)
+        committed = storage.latest(self.database)
+        self.assertEqual(committed['ram_total_bytes'], 100 * 1024)
+        self.assertEqual(committed['uptime_seconds'], 1234.0)
+        self.assertEqual(committed['network']['eth0']['tx_bytes'], 200)
+        self.assertEqual(committed, result)
+        self.assertEqual(storage.previous(self.database)['boot_id'], 'host-boot')
+
     def test_atomic_publish(self):
         storage.publish(self.root / 'snapshot.json', sample())
         self.assertEqual(json.loads((self.root / 'snapshot.json').read_text()), sample())
@@ -142,6 +164,17 @@ class CounterTests(unittest.TestCase):
 
 
 class DeploymentTests(unittest.TestCase):
+    def test_native_deploy_cannot_replace_docker_runtime(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            unit = root / 'collector.service'
+            unit.write_text('ExecStart=/usr/bin/docker compose run metrics')
+            with patch('tools.install_release.UNIT', unit), patch('tools.install_release.ROOT', root / 'releases'):
+                with self.assertRaisesRegex(RuntimeError, 'Docker collection is installed'):
+                    deploy(b'invalid archive')
+            self.assertFalse((root / 'releases').exists())
+
+
     def test_traversal_and_links_are_rejected(self):
         for name, kind in (('../escape', tarfile.REGTYPE), ('vps_metrics/link', tarfile.SYMTYPE)):
             stream = io.BytesIO()

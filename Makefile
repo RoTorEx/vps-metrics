@@ -1,11 +1,13 @@
 PYTHON ?= $(if $(wildcard /opt/homebrew/bin/python3.13),/opt/homebrew/bin/python3.13,python3)
 export PYTHONDONTWRITEBYTECODE := 1
-.PHONY: check test lint build release release-push deploy
+.PHONY: check test lint build release release-push deploy docker-build
 check: lint test
 lint:
 	@$(PYTHON) tools/check.py
 test:
 	@$(PYTHON) -m unittest discover -s tests -v
+docker-build:
+	docker build -t personal-vps-metrics:2026-10-13 .
 build:
 	@$(PYTHON) tools/build.py
 release:

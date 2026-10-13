@@ -1,0 +1,27 @@
+[Unit]
+Description=Collect host metrics in an isolated Docker container
+Requires=docker.service
+After=docker.service
+RequiresMountsFor=/srv/monitoring
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/monitoring/collector/docker
+Environment=DOCKER_CONFIG=/run/personal-vps-metrics
+RuntimeDirectory=personal-vps-metrics
+ExecStartPre=-/usr/bin/docker rm -f personal-vps-metrics
+ExecStart=/usr/bin/docker compose --env-file /srv/monitoring/config/collector.env run --rm --no-deps --name personal-vps-metrics metrics
+ExecStopPost=-/usr/bin/docker rm -f personal-vps-metrics
+UMask=0022
+TimeoutStartSec=30
+MemoryMax=128M
+TasksMax=64
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX

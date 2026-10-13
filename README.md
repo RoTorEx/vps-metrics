@@ -1,7 +1,7 @@
 # VPS Metrics
 
-Dependency-free Linux host metrics collector: systemd + SQLite, with a compatible
-atomic JSON snapshot for an existing bot. Python 3.11+; no Docker socket,
+Dependency-free Linux host metrics collector: Docker + systemd + SQLite, with a compatible
+atomic JSON snapshot for an existing bot. Python 3.11+; the collector has no Docker socket,
 privileged collector, public listener, or monitoring daemon.
 
 ## Layout
@@ -9,6 +9,7 @@ privileged collector, public listener, or monitoring daemon.
 ```text
 /srv/monitoring/
   collector/
+    docker/               # Administrator-owned Docker source checkout
     releases/v0.1.0/       # Immutable application source
     current -> releases/v0.1.0
   config/                 # Private configuration owned by the setup repository
@@ -36,6 +37,12 @@ python3 -m vps_metrics check --database ./data/metrics.db
 Collection runs on Linux. Storage and release tests also run on macOS. The
 Makefile uses Homebrew Python 3.13 when available on macOS; override `PYTHON`
 when needed. Standard-library-only runtime and tests require no dependency install.
+Docker collection uses the same SQLite/JSON writer, scheduled every 30 seconds
+by systemd. Its multi-stage image runs tests before copying only runtime source.
+The container has no network or capabilities, writes only data, and reads six
+individual host proc counters. It does not mount the host root or all of /proc.
+The original native service remains available for explicit rollback.
+
 See [reader contract](docs/READER.md), [manual setup and deployment](docs/DEPLOYMENT.md),
 and [business rules](BUSINESS.md).
 

@@ -1,0 +1,29 @@
+name: vps-metrics
+services:
+  metrics:
+    build: .
+    image: personal-vps-metrics:2026-10-13
+    user: "${METRICS_UID:?Set METRICS_UID}:${METRICS_GID:?Set METRICS_GID}"
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=8m
+    volumes:
+      - /srv/monitoring/data:/data
+      - /proc/stat:/host/proc/stat:ro
+      - /proc/meminfo:/host/proc/meminfo:ro
+      - /proc/uptime:/host/proc/uptime:ro
+      - /proc/sys/kernel/random/boot_id:/host/proc/sys/kernel/random/boot_id:ro
+      # Host PID 1's network view remains truthful with network_mode: none.
+      - /proc/1/net/dev:/host/proc/net/dev:ro
+    mem_limit: 64m
+    memswap_limit: 64m
+    cpus: 0.05
+    pids_limit: 16
+    logging:
+      driver: json-file
+      options:
+        max-size: 1m
+        max-file: '2'

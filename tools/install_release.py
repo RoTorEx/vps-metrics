@@ -35,7 +35,7 @@ def unpack(payload, destination):
             parts = Path(member.name).parts
             if (not member.isfile() or member.name.startswith('/') or '..' in parts
                 or member.name in names or not parts
-                or not (parts[0] in ('vps_metrics', 'systemd', 'docs') or member.name in ('pyproject.toml', 'README.md', 'BUSINESS.md', 'CHANGELOG.md'))):
+                or not (parts[0] in ('vps_metrics', 'systemd', 'docs') or member.name in ('pyproject.toml', 'README.md', 'BUSINESS.md', 'CHANGELOG.md', 'Dockerfile', 'compose.yaml', '.dockerignore'))):
                 raise ValueError('Unsafe release member')
             names.add(member.name)
             target = destination / member.name
@@ -53,6 +53,8 @@ def unpack(payload, destination):
 
 
 def deploy(payload):
+    if UNIT.exists() and 'docker compose' in UNIT.read_text():
+        raise RuntimeError('Docker collection is installed; use the administrator Docker deployment procedure.')
     ROOT.mkdir(parents=True, exist_ok=True)
     releases = ROOT / 'releases'
     releases.mkdir(exist_ok=True)

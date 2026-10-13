@@ -28,6 +28,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      - name: Build and smoke-test the collector image
+        run: |
+          make docker-build
+          docker run --rm --network none --read-only --cap-drop ALL personal-vps-metrics:2026-10-13 --version
       - run: make build PYTHON=python
       - uses: actions/upload-artifact@v4
         with:

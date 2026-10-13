@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add a checked multi-stage Docker collector, narrow host-counter mounts, preserved SQLite history and systemd scheduling; prevent native deployment from silently replacing Docker runtime.
+
 ## [Unreleased]
 
 ## [0.1.0] - 2026-10-13

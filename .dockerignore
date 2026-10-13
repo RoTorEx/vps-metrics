@@ -1,0 +1,10 @@
+*
+!Dockerfile
+!pyproject.toml
+!vps_metrics/
+!vps_metrics/**
+!tools/
+!tools/install_release.py
+!tests/
+!tests/**
+**/__pycache__

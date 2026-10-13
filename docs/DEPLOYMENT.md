@@ -3,6 +3,56 @@
 Complete the VPS baseline first. Use an administrator with sudo and verify the
 server's SSH host key. Python 3.11+ and systemd are required. No new port opens.
 
+## Docker installation and updates (current VPS runtime)
+
+Use the existing administrator SSH and production Docker. Preserve the
+`vps-monitor` identity and `/srv/monitoring/data`; do not recreate the database.
+Clone this public source into `/srv/monitoring/collector/docker` as root. Before
+migration, create an online SQLite backup and a verified off-host recovery copy.
+
+```sh
+cd /srv/monitoring/collector/docker
+make docker-build
+printf 'METRICS_UID=%s\nMETRICS_GID=%s\n' "$(id -u vps-monitor)" "$(id -g vps-monitor)" > /srv/monitoring/config/collector.env
+chmod 600 /srv/monitoring/config/collector.env
+docker compose --env-file /srv/monitoring/config/collector.env config --quiet
+# Preserve the previous native unit for explicit rollback.
+cp /etc/systemd/system/personal-vps-metrics.service /srv/monitoring/config/metrics-native.service
+systemctl stop personal-vps-metrics.timer personal-vps-metrics.service
+install -m 644 systemd/personal-vps-metrics-docker.service /etc/systemd/system/personal-vps-metrics.service
+systemctl daemon-reload
+systemctl start personal-vps-metrics.service
+systemctl enable --now personal-vps-metrics.timer
+```
+
+The systemd timer creates one short-lived container every 30 seconds and removes
+it after collection. It restarts scheduling after boot; there is no extra
+permanent Python daemon. `network_mode: none`, capability drop, read-only root,
+64 MiB app memory, 0.05 CPU and 16 tasks bound the collector. The host service
+runs the Docker client as administrator, with a 128 MiB client limit and only
+AF_UNIX access; application code runs as the unchanged vps-monitor UID/GID.
+The container has no Docker socket, host network, privileged mode or host PID
+namespace. Only the required proc files are read-only mounts; `/proc/1/net/dev`
+provides host network counters even though the container has no network.
+The `/data` mount provides truthful host-filesystem statvfs values.
+
+Verify at least two newer SQLite rows, database quick_check, JSON scope/boot ID,
+RAM/disk totals against the host, eth0 counters, the bot's read-only snapshot
+and a successful independent heartbeat. Test an idle timer stop/start and confirm
+Docker and the timer are enabled at boot. Preserve prior history throughout.
+
+For updates, stop the timer, pull the verified source, run checks/build and
+start collection again. Verify freshness before resuming the timer; keep the
+previous image until verification succeeds. The native restricted deployment
+endpoint refuses Docker installations instead of silently reverting them.
+Automatic native deployment must remain disabled for this runtime. Docker
+updates currently use administrator access, without new credentials or releases.
+For native rollback, stop the timer, restore `config/metrics-native.service` to
+its original unit path, daemon-reload, start the service and resume the timer.
+The native v0.1.0 source and current symlink are retained for this recovery path.
+
+## Native installation (optional alternative)
+
 ## 1. Identity and directories
 
 ```sh
