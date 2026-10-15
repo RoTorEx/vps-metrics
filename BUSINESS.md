@@ -36,10 +36,13 @@ interrupted writer awaits recovery; the next writer performs recovery.
   protect consumers from huge results. Means use existing observations and
   gaps stay missing. Query intervals are timezone-aware and half-open [start,end).
 - SQLite busy timeout is 2 seconds; collector container memory 64 MiB,
-  CPU quota 5%, task limit 16; Docker scheduling service timeout 30 seconds
-  and client memory 128 MiB: bound interference with the bot/VPN/CI while
-  allowing collection and recovery. Large recovery exceeding these limits
-  requires administrator investigation rather than weakening limits silently.
+  CPU quota 20%, task limit 16; Docker scheduling service timeout 30 seconds
+  and client memory 128 MiB: allow short collection bursts without exhausting
+  the service deadline while bounding interference with the bot/VPN/CI. The
+  former 5% cap throttled every observed CPU period and repeatedly timed out
+  the 30-second Docker service on the production VPS. Large recovery exceeding
+  these limits requires administrator investigation rather than weakening limits
+  silently.
 - Deployment accepts at most 5 MiB compressed/expanded and 128 regular files:
   release code is small; reject traversal, symlinks, duplicated names, and
   unexpected paths. Release versions are immutable, retrying identical bytes

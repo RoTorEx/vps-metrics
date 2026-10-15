@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Raise the Docker collector CPU cap to 20% of one core so routine samples complete within the 30-second service timeout.
 - Add a checked multi-stage Docker collector, narrow host-counter mounts, preserved SQLite history and systemd scheduling; prevent native deployment from silently replacing Docker runtime.
 
 ## [Unreleased]

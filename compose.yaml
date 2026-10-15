@@ -20,7 +20,7 @@ services:
       - /proc/1/net/dev:/host/proc/net/dev:ro
     mem_limit: 64m
     memswap_limit: 64m
-    cpus: 0.05
+    cpus: 0.2
     pids_limit: 16
     logging:
       driver: json-file

@@ -28,7 +28,7 @@ systemctl enable --now personal-vps-metrics.timer
 The systemd timer creates one short-lived container every 30 seconds and removes
 it after collection. It restarts scheduling after boot; there is no extra
 permanent Python daemon. `network_mode: none`, capability drop, read-only root,
-64 MiB app memory, 0.05 CPU and 16 tasks bound the collector. The host service
+64 MiB app memory, 0.2 CPU and 16 tasks bound the collector. The host service
 runs the Docker client as administrator, with a 128 MiB client limit and only
 AF_UNIX access; application code runs as the unchanged vps-monitor UID/GID.
 The container has no Docker socket, host network, privileged mode or host PID
