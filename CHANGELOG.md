@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-17
+
 - Rename the collector, package, and runtime to `host-metrics` with a dedicated
   source and data directory.
 - Raise the Docker collector CPU cap to 20% of one core so routine samples complete within the 30-second service timeout.
