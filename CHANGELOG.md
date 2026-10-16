@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+- Include service/native-version/source-revision context in collection logs and failure diagnostics.
+
 ## [0.1.0] - 2026-10-13
 
 - Collect Linux host CPU, memory, swap, filesystem, load, uptime and per-interface network counters every 30 seconds.

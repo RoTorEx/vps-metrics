@@ -78,3 +78,10 @@ make vibe-pull
 `make vibe-kernel-path` shows the configured source. The machine-specific
 `.vibe/KERNEL_SOURCE` is ignored by Git. `make vibe-propose` submits an
 interactive, reviewable proposal to that source; it changes no shared rule.
+
+## Runtime log identity
+
+Collection records and error diagnostics include service/version/revision. Native
+version comes from pyproject.toml; `make docker-build` bakes the source commit.
+The host timer captures output in `journalctl -u personal-vps-metrics.service`;
+API/CLI data responses and stored measurement schemas remain unchanged.

@@ -8,6 +8,9 @@ COPY tests/ tests/
 RUN PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 
 FROM python:3.13-alpine AS runtime
+ARG SERVICE_REVISION=development
+ENV SERVICE_REVISION=$SERVICE_REVISION
+LABEL org.opencontainers.image.revision=$SERVICE_REVISION
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY --from=checked-source /source/pyproject.toml ./

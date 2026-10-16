@@ -1,6 +1,7 @@
 """Collect once, or read the latest sample and bounded history."""
 
 from contextlib import closing
+from datetime import datetime, timezone
 import argparse
 import fcntl
 import json
@@ -57,7 +58,7 @@ def main():
         if args.command == "collect":
             os.umask(0o022)
             data = run_once(args.data_dir, args.disk, args.retention_days, args.max_samples, args.max_db_mib, args.proc_root)
-            print(json.dumps({"captured_at": data["captured_at"], "collector_version": data["collector_version"], "history": "committed"}))
+            print(json.dumps({"captured_at": data["captured_at"], "service": "vps-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "collector_version": data["collector_version"], "history": "committed"}))
         elif args.command == "latest":
             print(json.dumps(storage.latest(args.database), allow_nan=False))
         elif args.command == "history":
@@ -70,7 +71,7 @@ def main():
                 print(json.dumps({"integrity": result, "samples": connection.execute("SELECT COUNT(*) FROM samples").fetchone()[0]}))
         return 0
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error, RuntimeError) as exc:
-        print(f"Metrics operation failed: {exc}", file=sys.stderr)
+        print(json.dumps({"timestamp": datetime.now(timezone.utc).isoformat(), "service": "vps-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "event": "Metrics operation failed", "error": str(exc)}), file=sys.stderr)
         return 1
 
 
