@@ -1,14 +1,14 @@
 [Unit]
 Description=Collect host metrics and bounded SQLite history
 After=local-fs.target
-RequiresMountsFor=/srv/monitoring
+RequiresMountsFor=/srv/host-metrics
 
 [Service]
 Type=oneshot
 User=vps-monitor
 Group=vps-monitor
-WorkingDirectory=/srv/monitoring/collector/current
-ExecStart=/usr/bin/python3 -m vps_metrics collect
+WorkingDirectory=/srv/host-metrics/current
+ExecStart=/usr/bin/python3 -m host_metrics collect
 Environment=PYTHONDONTWRITEBYTECODE=1
 UMask=0022
 TimeoutStartSec=20
@@ -28,4 +28,4 @@ ProtectControlGroups=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
 RestrictAddressFamilies=AF_UNIX
-ReadWritePaths=/srv/monitoring/data
+ReadWritePaths=/srv/host-metrics/data

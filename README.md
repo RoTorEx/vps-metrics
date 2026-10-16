@@ -1,4 +1,4 @@
-# VPS Metrics
+# Host Metrics
 
 Dependency-free Linux host metrics collector: Docker + systemd + SQLite, with a compatible
 atomic JSON snapshot for an existing bot. Python 3.11+; the collector has no Docker socket,
@@ -7,12 +7,11 @@ privileged collector, public listener, or monitoring daemon.
 ## Layout
 
 ```text
-/srv/monitoring/
-  collector/
-    docker/               # Administrator-owned Docker source checkout
-    releases/v0.1.0/       # Immutable application source
-    current -> releases/v0.1.0
-  config/                 # Private configuration owned by the setup repository
+/srv/host-metrics/
+  host_metrics/            # Collector source checkout
+  releases/v0.1.0/        # Native rollback source
+  current -> releases/v0.1.0
+  config/                 # Private collector configuration
   data/                   # metrics.db, snapshot.json, writer lock
   logs/                   # Optional exports; systemd uses journald
 ```
@@ -26,12 +25,12 @@ needs no writable WAL directory. Do not use SQLite `immutable=1` on this live DB
 ```sh
 make check
 make build
-python3 -m vps_metrics --version
-python3 -m vps_metrics collect --data-dir ./data --disk /
-python3 -m vps_metrics latest --database ./data/metrics.db
-python3 -m vps_metrics history --database ./data/metrics.db \
+python3 -m host_metrics --version
+python3 -m host_metrics collect --data-dir ./data --disk /
+python3 -m host_metrics latest --database ./data/metrics.db
+python3 -m host_metrics history --database ./data/metrics.db \
   --start 2026-10-13T00:00:00Z --end 2026-10-14T00:00:00Z --limit 500
-python3 -m vps_metrics check --database ./data/metrics.db
+python3 -m host_metrics check --database ./data/metrics.db
 ```
 
 Collection runs on Linux. Storage and release tests also run on macOS. The
@@ -83,7 +82,7 @@ interactive, reviewable proposal to that source; it changes no shared rule.
 
 Collection records and error diagnostics include service/version/revision. Native
 version comes from pyproject.toml; `make docker-build` bakes the source commit.
-The host timer captures output in `journalctl -u personal-vps-metrics.service`;
+The host timer captures output in `journalctl -u host-metrics.service`;
 API/CLI data responses and stored measurement schemas remain unchanged.
 
 ## Persistent console logs
@@ -91,7 +90,7 @@ API/CLI data responses and stored measurement schemas remain unchanged.
 Compose sends console records to the host's persistent systemd journal, outside
 container storage. Restarting Docker, replacing containers and rebooting the host
 do not intentionally remove them. Query current and previous instances with
-`sudo journalctl -u personal-vps-metrics.service` (includes short-lived collector output); `docker logs --timestamps --details CONTAINER` remains available.
+`sudo journalctl -u host-metrics.service` (includes short-lived collector output); `docker logs --timestamps --details CONTAINER` remains available.
 The VPS journal has shared limits of 256 MiB and 14 days; size pressure can
 shorten history. Logs are diagnostic history, not permanent usage counters or
 off-host backups. Never put credentials or private profiles in logs or Git.

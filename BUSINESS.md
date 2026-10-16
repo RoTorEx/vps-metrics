@@ -1,4 +1,4 @@
-# VPS Metrics
+# Host Metrics
 
 ## Purpose and actors
 
@@ -55,14 +55,14 @@ Change limits together with the CLI, service, documentation and relevant tests.
 ## Boundaries and ownership
 
 This repository owns collection, persistence, read APIs, service units and release
-artifacts. `personal-monitoring` owns the VPS setup guide and external heartbeat.
-`assistant_bot` owns Telegram display and future history charts. No public port,
+artifacts. `host-health` owns the VPS setup guide and external heartbeat.
+`telegram-assistant` owns Telegram display and future history charts. No public port,
 Docker socket, root collector, credentials, external alerts, dashboard, or UI
 is part of the collector. Disk I/O and container status are deferred.
 
 ## Code map
 
-`vps_metrics/collect.py`: Linux counters and rates. `storage.py`: transactions,
+`host_metrics/collect.py`: Linux counters and rates. `storage.py`: transactions,
 retention, atomic JSON and read APIs. `__main__.py`: CLI and writer lock.
 `Dockerfile` and `compose.yaml`: checked runtime and narrow host-counter mounts.
 `systemd/`: service isolation and schedule. `tools/`: checked release and deploy.

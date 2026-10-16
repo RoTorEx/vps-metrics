@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--version", action="version", version=version())
     commands = parser.add_subparsers(dest="command", required=True)
     command = commands.add_parser("collect")
-    command.add_argument("--data-dir", default="/srv/monitoring/data")
+    command.add_argument("--data-dir", default="/srv/host-metrics/data")
     command.add_argument("--disk", default="/srv")
     command.add_argument("--proc-root", default="/proc", help="Read-only host counters mount for container collection.")
     command.add_argument("--retention-days", type=int, default=30)
@@ -48,7 +48,7 @@ def main():
     command.add_argument("--max-db-mib", type=int, default=256)
     for name in ("latest", "history", "check"):
         command = commands.add_parser(name)
-        command.add_argument("--database", default="/srv/monitoring/data/metrics.db")
+        command.add_argument("--database", default="/srv/host-metrics/data/metrics.db")
         if name == "history":
             command.add_argument("--start", required=True)
             command.add_argument("--end", required=True)
@@ -58,7 +58,7 @@ def main():
         if args.command == "collect":
             os.umask(0o022)
             data = run_once(args.data_dir, args.disk, args.retention_days, args.max_samples, args.max_db_mib, args.proc_root)
-            print(json.dumps({"captured_at": data["captured_at"], "service": "vps-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "collector_version": data["collector_version"], "history": "committed"}))
+            print(json.dumps({"captured_at": data["captured_at"], "service": "host-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "collector_version": data["collector_version"], "history": "committed"}))
         elif args.command == "latest":
             print(json.dumps(storage.latest(args.database), allow_nan=False))
         elif args.command == "history":
@@ -71,7 +71,7 @@ def main():
                 print(json.dumps({"integrity": result, "samples": connection.execute("SELECT COUNT(*) FROM samples").fetchone()[0]}))
         return 0
     except (OSError, ValueError, KeyError, TypeError, sqlite3.Error, RuntimeError) as exc:
-        print(json.dumps({"timestamp": datetime.now(timezone.utc).isoformat(), "service": "vps-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "event": "Metrics operation failed", "error": str(exc)}), file=sys.stderr)
+        print(json.dumps({"timestamp": datetime.now(timezone.utc).isoformat(), "service": "host-metrics", "version": version(), "revision": os.environ.get("SERVICE_REVISION", "unknown"), "event": "Metrics operation failed", "error": str(exc)}), file=sys.stderr)
         return 1
 
 

@@ -1,8 +1,8 @@
 *
 !Dockerfile
 !pyproject.toml
-!vps_metrics/
-!vps_metrics/**
+!host_metrics/
+!host_metrics/**
 !tools/
 !tools/install_release.py
 !tests/

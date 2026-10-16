@@ -10,8 +10,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from vps_metrics import collect, storage
-from vps_metrics.__main__ import run_once
+from host_metrics import collect, storage
+from host_metrics.__main__ import run_once
 from tools.install_release import unpack, deploy
 
 BASE = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
@@ -88,7 +88,7 @@ class StorageTests(unittest.TestCase):
     def test_failed_history_never_publishes_fresh_json(self):
         target = self.root / 'snapshot.json'
         target.write_text('old')
-        with patch('vps_metrics.collect.snapshot', return_value=(sample(), {})), patch('vps_metrics.storage.store', side_effect=sqlite3.OperationalError('full')):
+        with patch('host_metrics.collect.snapshot', return_value=(sample(), {})), patch('host_metrics.storage.store', side_effect=sqlite3.OperationalError('full')):
             with self.assertRaises(sqlite3.OperationalError):
                 run_once(self.root, '/', 30, 86400, 256)
         self.assertEqual(target.read_text(), 'old')
@@ -106,7 +106,7 @@ class StorageTests(unittest.TestCase):
             target = proc / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(text)
-        with patch('vps_metrics.collect.time.sleep', side_effect=lambda _: (proc / 'stat').write_text('cpu 30 0 30 130 10 0 0 0')):
+        with patch('host_metrics.collect.time.sleep', side_effect=lambda _: (proc / 'stat').write_text('cpu 30 0 30 130 10 0 0 0')):
             result = run_once(self.root, self.root, 30, 86400, 256, proc_root=proc)
         committed = storage.latest(self.database)
         self.assertEqual(committed['ram_total_bytes'], 100 * 1024)
@@ -176,7 +176,7 @@ class DeploymentTests(unittest.TestCase):
 
 
     def test_traversal_and_links_are_rejected(self):
-        for name, kind in (('../escape', tarfile.REGTYPE), ('vps_metrics/link', tarfile.SYMTYPE)):
+        for name, kind in (('../escape', tarfile.REGTYPE), ('host_metrics/link', tarfile.SYMTYPE)):
             stream = io.BytesIO()
             with tarfile.open(fileobj=stream, mode='w:gz') as archive:
                 member = tarfile.TarInfo(name)

@@ -31,7 +31,7 @@ update_metadata() {
     current="$1"
     target="$2"
     release_date="$(date +%Y-%m-%d)"
-    temporary="${TMPDIR:-/tmp}/vps-metrics-release-$$"
+    temporary="${TMPDIR:-/tmp}/host-metrics-release-$$"
     mkdir -p "$temporary"
 
     grep -qx '## \[Unreleased\]' CHANGELOG.md \
@@ -69,7 +69,7 @@ update_metadata() {
 
 [ "$#" -eq 0 ] || fail "make release does not accept arguments"
 
-temporary="${TMPDIR:-/tmp}/vps-metrics-release-$$"
+temporary="${TMPDIR:-/tmp}/host-metrics-release-$$"
 trap 'rm -rf "$temporary"' EXIT HUP INT TERM
 
 branch="$(git branch --show-current)"

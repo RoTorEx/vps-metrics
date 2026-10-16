@@ -6,23 +6,24 @@ server's SSH host key. Python 3.11+ and systemd are required. No new port opens.
 ## Docker installation and updates (current VPS runtime)
 
 Use the existing administrator SSH and production Docker. Preserve the
-`vps-monitor` identity and `/srv/monitoring/data`; do not recreate the database.
-Clone this public source into `/srv/monitoring/collector/docker` as root. Before
+`vps-monitor` identity and `/srv/host-metrics/data`; do not recreate the database.
+Clone this public source into `/srv/host-metrics` as root. Before
 migration, create an online SQLite backup and a verified off-host recovery copy.
 
 ```sh
-cd /srv/monitoring/collector/docker
+cd /srv/host-metrics
 make docker-build
-printf 'METRICS_UID=%s\nMETRICS_GID=%s\n' "$(id -u vps-monitor)" "$(id -g vps-monitor)" > /srv/monitoring/config/collector.env
-chmod 600 /srv/monitoring/config/collector.env
-docker compose --env-file /srv/monitoring/config/collector.env config --quiet
+install -d -m 700 /srv/host-metrics/config
+printf 'METRICS_UID=%s\nMETRICS_GID=%s\n' "$(id -u vps-monitor)" "$(id -g vps-monitor)" > /srv/host-metrics/config/collector.env
+chmod 600 /srv/host-metrics/config/collector.env
+docker compose --env-file /srv/host-metrics/config/collector.env config --quiet
 # Preserve the previous native unit for explicit rollback.
-cp /etc/systemd/system/personal-vps-metrics.service /srv/monitoring/config/metrics-native.service
-systemctl stop personal-vps-metrics.timer personal-vps-metrics.service
-install -m 644 systemd/personal-vps-metrics-docker.service /etc/systemd/system/personal-vps-metrics.service
+cp /etc/systemd/system/host-metrics.service /srv/host-metrics/config/metrics-native.service
+systemctl stop host-metrics.timer host-metrics.service
+install -m 644 systemd/host-metrics-docker.service /etc/systemd/system/host-metrics.service
 systemctl daemon-reload
-systemctl start personal-vps-metrics.service
-systemctl enable --now personal-vps-metrics.timer
+systemctl start host-metrics.service
+systemctl enable --now host-metrics.timer
 ```
 
 The systemd timer creates one short-lived container every 30 seconds and removes
@@ -57,9 +58,9 @@ The native v0.1.0 source and current symlink are retained for this recovery path
 
 ```sh
 sudo useradd --system --home-dir /nonexistent --shell /usr/sbin/nologin vps-monitor
-sudo install -d -o root -g root -m 755 /srv/monitoring /srv/monitoring/collector
-sudo install -d -o vps-monitor -g vps-monitor -m 755 /srv/monitoring/data
-sudo install -d -o root -g root -m 700 /srv/monitoring/config
+sudo install -d -o root -g root -m 755 /srv/host-metrics
+sudo install -d -o vps-monitor -g vps-monitor -m 755 /srv/host-metrics/data
+sudo install -d -o root -g root -m 700 /srv/host-metrics/config
 ```
 
 Skip user creation if the identity already exists. Keep code root-owned and data
@@ -73,17 +74,17 @@ service, and transfer these three files to the VPS using your verified admin SSH
 Then install them from the transferred directory:
 
 ```sh
-sudo install -D -m 755 tools/install_release.py /usr/local/libexec/vps-metrics-install.py
-sudo install -D -m 644 systemd/personal-vps-metrics.service /usr/local/share/vps-metrics/personal-vps-metrics.service
-sudo install -m 644 systemd/personal-vps-metrics.service /etc/systemd/system/personal-vps-metrics.service
-sudo install -m 644 systemd/personal-vps-metrics.timer /etc/systemd/system/personal-vps-metrics.timer
+sudo install -D -m 755 tools/install_release.py /usr/local/libexec/host-metrics-install.py
+sudo install -D -m 644 systemd/host-metrics.service /usr/local/share/host-metrics/host-metrics.service
+sudo install -m 644 systemd/host-metrics.service /etc/systemd/system/host-metrics.service
+sudo install -m 644 systemd/host-metrics.timer /etc/systemd/system/host-metrics.timer
 ```
 
-Create `/usr/local/sbin/deploy-vps-metrics`, root-owned mode 755:
+Create `/usr/local/sbin/deploy-host-metrics`, root-owned mode 755:
 
 ```sh
 #!/bin/sh
-exec /usr/bin/python3 -I /usr/local/libexec/vps-metrics-install.py
+exec /usr/bin/python3 -I /usr/local/libexec/host-metrics-install.py
 ```
 
 `-I` ignores caller Python paths and environment. This endpoint accepts only an
@@ -119,14 +120,14 @@ Generate a dedicated Ed25519 key on the admin machine. Add ONLY its public key
 to `authorized_keys`, prefixed with:
 
 ```text
-restrict,command="sudo -n /usr/local/sbin/deploy-vps-metrics" ssh-ed25519 PUBLIC_KEY
+restrict,command="sudo -n /usr/local/sbin/deploy-host-metrics" ssh-ed25519 PUBLIC_KEY
 ```
 
 Set authorized_keys mode 600 and ownership metrics-deploy. Add a root-owned
 mode-440 `/etc/sudoers.d/metrics-deploy` containing:
 
 ```text
-metrics-deploy ALL=(root) NOPASSWD: /usr/local/sbin/deploy-vps-metrics ""
+metrics-deploy ALL=(root) NOPASSWD: /usr/local/sbin/deploy-host-metrics ""
 ```
 
 Validate with `sudo visudo -cf /etc/sudoers.d/metrics-deploy`. This user needs no
@@ -148,12 +149,12 @@ job, not just the local tag. First-time installation must enable the timer:
 
 ```sh
 sudo systemctl daemon-reload
-sudo systemctl enable --now personal-vps-metrics.timer
-sudo systemctl start personal-vps-metrics.service
-sudo journalctl -u personal-vps-metrics.service -n 20 --no-pager
-cd /srv/monitoring/collector/current
-python3 -m vps_metrics check
-python3 -m vps_metrics latest
+sudo systemctl enable --now host-metrics.timer
+sudo systemctl start host-metrics.service
+sudo journalctl -u host-metrics.service -n 20 --no-pager
+cd /srv/host-metrics/current
+python3 -m host_metrics check
+python3 -m host_metrics latest
 ```
 
 For an explicit manual deployment of a built checksummed archive, set
@@ -161,7 +162,7 @@ For an explicit manual deployment of a built checksummed archive, set
 An enabled automatic tag workflow does this with repository secrets.
 Verify repeated timer samples, database integrity, read-only consumer access,
 and boot persistence. The collector has no IP access; the external heartbeat
-remains a separate service in personal-monitoring.
+remains a separate service in host-health.
 
 ## 5. Backup and rollback
 

@@ -13,9 +13,9 @@ import tempfile
 import time
 import tomllib
 
-ROOT = Path('/srv/monitoring/collector')
-SERVICE = 'personal-vps-metrics.service'
-TIMER = 'personal-vps-metrics.timer'
+ROOT = Path('/srv/host-metrics')
+SERVICE = 'host-metrics.service'
+TIMER = 'host-metrics.timer'
 UNIT = Path('/etc/systemd/system') / SERVICE
 
 
@@ -35,7 +35,7 @@ def unpack(payload, destination):
             parts = Path(member.name).parts
             if (not member.isfile() or member.name.startswith('/') or '..' in parts
                 or member.name in names or not parts
-                or not (parts[0] in ('vps_metrics', 'systemd', 'docs') or member.name in ('pyproject.toml', 'README.md', 'BUSINESS.md', 'CHANGELOG.md', 'Dockerfile', 'compose.yaml', '.dockerignore'))):
+                or not (parts[0] in ('host_metrics', 'systemd', 'docs') or member.name in ('pyproject.toml', 'README.md', 'BUSINESS.md', 'CHANGELOG.md', 'Dockerfile', 'compose.yaml', '.dockerignore'))):
                 raise ValueError('Unsafe release member')
             names.add(member.name)
             target = destination / member.name
@@ -44,10 +44,10 @@ def unpack(payload, destination):
                 shutil.copyfileobj(source, output)
             target.chmod(0o644)
     metadata = tomllib.loads((destination / 'pyproject.toml').read_text())['project']
-    if metadata['name'] != 'vps-metrics' or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', metadata['version']):
+    if metadata['name'] != 'host-metrics' or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', metadata['version']):
         raise ValueError('Invalid release identity')
     for name in ('__init__.py', '__main__.py', 'collect.py', 'storage.py'):
-        if not (destination / 'vps_metrics' / name).is_file():
+        if not (destination / 'host_metrics' / name).is_file():
             raise ValueError('Incomplete release')
     return metadata['version']
 
@@ -84,10 +84,10 @@ def deploy(payload):
             switch.replace(current)
             # The administrator installs this canonical unit once. Never install
             # a unit or execute a script supplied by the SSH deployment caller as root.
-            shutil.copyfile('/usr/local/share/vps-metrics/personal-vps-metrics.service', UNIT)
+            shutil.copyfile('/usr/local/share/host-metrics/host-metrics.service', UNIT)
             command('systemctl', 'daemon-reload')
             command('systemctl', 'start', SERVICE)
-            sample = json.loads(Path('/srv/monitoring/data/snapshot.json').read_text())
+            sample = json.loads(Path('/srv/host-metrics/data/snapshot.json').read_text())
             from datetime import datetime
             if sample['collector_version'] != version or datetime.fromisoformat(sample['captured_at']).timestamp() < started:
                 raise RuntimeError('Fresh committed sample verification failed')

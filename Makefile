@@ -7,7 +7,7 @@ lint:
 test:
 	@$(PYTHON) -m unittest discover -s tests -v
 docker-build:
-	docker build --build-arg SERVICE_REVISION="$$(git rev-parse HEAD)" -t personal-vps-metrics:2026-10-13 .
+	docker build --build-arg SERVICE_REVISION="$$(git rev-parse HEAD)" -t host-metrics:2026-10-17 .
 build:
 	@$(PYTHON) tools/build.py
 release:

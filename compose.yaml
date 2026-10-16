@@ -1,8 +1,8 @@
-name: vps-metrics
+name: host-metrics
 services:
   metrics:
     build: .
-    image: personal-vps-metrics:2026-10-13
+    image: host-metrics:2026-10-17
     user: "${METRICS_UID:?Set METRICS_UID}:${METRICS_GID:?Set METRICS_GID}"
     network_mode: none
     cap_drop: [ALL]
@@ -11,7 +11,7 @@ services:
     tmpfs:
       - /tmp:mode=1777,size=8m
     volumes:
-      - /srv/monitoring/data:/data
+      - /srv/host-metrics/data:/data
       - /proc/stat:/host/proc/stat:ro
       - /proc/meminfo:/host/proc/meminfo:ro
       - /proc/uptime:/host/proc/uptime:ro

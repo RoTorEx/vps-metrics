@@ -7,11 +7,11 @@ import tomllib
 version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
 output = Path("dist")
 output.mkdir(exist_ok=True)
-artifact = output / f"vps-metrics-v{version}.tar.gz"
+artifact = output / f"host-metrics-v{version}.tar.gz"
 files = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
 with tarfile.open(artifact, "w:gz") as archive:
     for name in sorted(filter(None, files)):
-        if name.startswith(("vps_metrics/", "systemd/", "docs/")) or name in ("pyproject.toml", "README.md", "BUSINESS.md", "CHANGELOG.md", "Dockerfile", "compose.yaml", ".dockerignore"):
+        if name.startswith(("host_metrics/", "systemd/", "docs/")) or name in ("pyproject.toml", "README.md", "BUSINESS.md", "CHANGELOG.md", "Dockerfile", "compose.yaml", ".dockerignore"):
             path = Path(name)
             if not path.is_file() or path.is_symlink():
                 raise ValueError(f"Unexpected release member: {name}")

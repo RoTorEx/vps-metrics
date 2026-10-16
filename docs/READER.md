@@ -6,7 +6,7 @@ microseconds, primary key), `sample_json` and private `counters_json` columns.
 for the writer's boot-aware deltas, not a consumer API.
 
 ```python
-from vps_metrics.storage import latest, history
+from host_metrics.storage import latest, history
 snapshot = latest('/run/host-metrics/metrics.db')
 points = history('/run/host-metrics/metrics.db',
                  '2026-10-13T00:00:00Z', '2026-10-14T00:00:00Z', limit=500)
