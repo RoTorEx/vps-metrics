@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-16
+
 - Preserve container logs in the host journal across container replacement.
 
 ## [0.1.1] - 2026-10-16
