@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-16
+
 - Include service/native-version/source-revision context in collection logs and failure diagnostics.
 
 ## [0.1.0] - 2026-10-13
