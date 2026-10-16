@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+- Preserve container logs in the host journal across container replacement.
+
 ## [0.1.1] - 2026-10-16
 
 - Include service/native-version/source-revision context in collection logs and failure diagnostics.

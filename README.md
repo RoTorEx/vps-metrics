@@ -85,3 +85,13 @@ Collection records and error diagnostics include service/version/revision. Nativ
 version comes from pyproject.toml; `make docker-build` bakes the source commit.
 The host timer captures output in `journalctl -u personal-vps-metrics.service`;
 API/CLI data responses and stored measurement schemas remain unchanged.
+
+## Persistent console logs
+
+Compose sends console records to the host's persistent systemd journal, outside
+container storage. Restarting Docker, replacing containers and rebooting the host
+do not intentionally remove them. Query current and previous instances with
+`sudo journalctl -u personal-vps-metrics.service` (includes short-lived collector output); `docker logs --timestamps --details CONTAINER` remains available.
+The VPS journal has shared limits of 256 MiB and 14 days; size pressure can
+shorten history. Logs are diagnostic history, not permanent usage counters or
+off-host backups. Never put credentials or private profiles in logs or Git.

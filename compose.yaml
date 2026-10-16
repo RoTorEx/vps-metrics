@@ -23,7 +23,7 @@ services:
     cpus: 0.2
     pids_limit: 16
     logging:
-      driver: json-file
+      driver: journald
       options:
-        max-size: 1m
-        max-file: '2'
+        tag: "{{.Name}}"
+        env: SERVICE_REVISION
